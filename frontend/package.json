@@ -1,0 +1,22 @@
+{
+  "name": "audio-form-app",
+  "version": "1.0.0",
+  "description": "Formulario de registro con grabación de audio",
+  "type": "module",
+  "scripts": {
+    "dev": "http-server . -p 3000 -o",
+    "start": "http-server . -p 3000",
+    "build": "echo 'No build process needed for vanilla JS'"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  },
+  "keywords": [
+    "audio",
+    "form",
+    "recording",
+    "vanilla-js"
+  ],
+  "author": "",
+  "license": "MIT"
+}

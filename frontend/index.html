@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario de Registro - Tu Voz Importa</title>
+    <meta name="description" content="Comparte tu historia con nosotros. Cada mensaje es una oportunidad para conectar.">
+    
+    <!-- Preconnect para mejorar performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Estilos -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Meta tags para SEO y redes sociales -->
+    <meta property="og:title" content="Tu Voz Importa - Formulario de Registro">
+    <meta property="og:description" content="Comparte tu historia con nosotros a través de un mensaje de audio.">
+    <meta property="og:type" content="website">
+    
+    <!-- Favicon -->
+    
+</head>
+<body>
+    <div class="container">
+        <div class="podcast-background">
+            <div class="logo-container">
+                <img src="logo_blanco.png" alt="Logo de la empresa" class="logo">
+            </div>
+            
+            <form id="registroForm" class="form" novalidate>
+                <div class="form-header">
+                    <h1>Tu Voz Importa</h1>
+                    <p class="subtitle">Estamos escuchando tu historia. Cada mensaje es una oportunidad para conectar.</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">
+                        Correo Electrónico:
+                        <span class="required" aria-label="Campo obligatorio">*</span>
+                    </label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        required 
+                        autocomplete="email"
+                        placeholder="tu@email.com"
+                        aria-describedby="emailError"
+                    >
+                    <span class="error-message" id="emailError" role="alert" aria-live="polite"></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="empresa">
+                        Nombre de la Empresa:
+                        <span class="required" aria-label="Campo obligatorio">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="empresa" 
+                        name="empresa" 
+                        required
+                        autocomplete="organization"
+                        placeholder="NOMBRE DE TU EMPRESA"
+                        aria-describedby="empresaError"
+                        minlength="2"
+                        maxlength="100"
+                    >
+                    <span class="error-message" id="empresaError" role="alert" aria-live="polite"></span>
+                </div>
+
+                <div class="form-group recording-section">
+                    <label for="audio">
+                        Tu Mensaje (máximo 2 minutos):
+                        <span class="required" aria-label="Campo obligatorio">*</span>
+                    </label>
+                    <p class="recording-instructions">
+                        Graba un mensaje de audio contándonos tu historia o propuesta.
+                    </p>
+                    
+                    <div class="audio-controls">
+                        <button 
+                            type="button" 
+                            id="startRecording" 
+                            class="recording-btn start-btn"
+                            aria-label="Iniciar grabación de audio"
+                            aria-describedby="audioError"
+                        >
+                            <span class="btn-icon" aria-hidden="true">🎙️</span>
+                            <span class="btn-text">Iniciar Grabación</span>
+                        </button>
+                        <button 
+                            type="button" 
+                            id="stopRecording" 
+                            disabled 
+                            class="recording-btn stop-btn"
+                            aria-label="Detener grabación de audio"
+                        >
+                            <span class="btn-icon" aria-hidden="true">⏹️</span>
+                            <span class="btn-text">Detener Grabación</span>
+                        </button>
+                    </div>
+                    
+                    <div id="timerDisplay" class="timer" aria-live="polite" aria-label="Tiempo de grabación">
+                        00:00.00
+                    </div>
+                    
+                    <audio 
+                        id="audioPreview" 
+                        controls 
+                        style="display: none;"
+                        aria-label="Reproducir audio grabado"
+                        preload="none"
+                    ></audio>
+                    
+                    <span class="error-message" id="audioError" role="alert" aria-live="polite"></span>
+                </div>
+
+                <button type="submit" id="submitBtn" class="submit-btn">
+                    <span class="btn-text">Enviar Mensaje</span>
+                    <span class="btn-icon" aria-hidden="true">📤</span>
+                </button>
+                
+                <div id="submitStatus" class="status-message" role="status" aria-live="polite"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="script.js"></script>
+    
+    <!-- Fallback para navegadores sin soporte de módulos -->
+    <script nomodule>
+        alert('Tu navegador no soporta JavaScript moderno. Por favor, actualiza tu navegador.');
+    </script>
+</body>
+</html>

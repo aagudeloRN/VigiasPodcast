@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Informe de Vigilancia para {{ nombre_empresa }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Source Sans Pro', Arial, sans-serif;
+      background-color: #f7f7f7;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #ffffff;
+    }
+    img.banner {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+    .disclaimer {
+      font-size: 0.8em;
+      font-style: italic;
+    }
+    h2 {
+      color: #005ea2;
+      border-bottom: 2px solid #ccc;
+      padding-bottom: 5px;
+      margin-top: 40px;
+    }
+    h3 {
+      color: #007acc;
+      margin-top: 25px;
+    }
+    p {
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+    ul {
+      margin-top: 10px;
+      margin-bottom: 20px;
+      padding-left: 20px;
+    }
+    .section {
+      margin-bottom: 30px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    
+    <img src="https://aagudelorn.github.io/images/Banner%20principal.png" alt="Banner superior" class="banner">
+    <img src="https://aagudelorn.github.io/images/Banner_1.png" alt="Reporte Automatizado de Tendencias" class="banner">
+
+    <div class="section">
+      <p><strong>Hola {{ nombre_empresa }},</strong></p>
+      <p>Este informe fue generado especialmente para ti el <strong>{{ generation_date }}</strong>, como parte de la experiencia <strong>Ruta N</strong> en el marco de <strong>StartCo Medellín</strong>.</p>
+      <p>Usamos inteligencia artificial y fuentes especializadas para identificar señales clave del ecosistema de CTeI que pueden ser de interés para tu negocio.</p>
+    </div>
+
+    <!-- Análisis Tecnológico -->
+    <div class="section">
+        <h2>Análisis Tecnológico</h2>
+        <h3>Impacto o Aplicaciones</h3>
+        {{ analisis_tecnologico.impacto | safe }}
+        <h3>Tendencias o Proyecciones</h3>
+        {{ analisis_tecnologico.tendencias | safe }}
+        <h3>Referencias</h3>
+        {% for ref in analisis_tecnologico.referencias %}
+            <p>{{ ref | safe }}</p>
+        {% endfor %}
+    </div>
+
+    <!-- Análisis Económico -->
+    <div class="section">
+        <h2>Análisis Económico y de Mercado</h2>
+        <h3>Modelos de Negocio Emergentes</h3>
+        {{ analisis_economico.modelos | safe }}
+        <h3>Riesgos o Condiciones Clave</h3>
+        {{ analisis_economico.riesgos | safe }}
+        <h3>Referencias</h3>
+        {% for ref in analisis_economico.referencias %}
+            <p>{{ ref | safe }}</p>
+        {% endfor %}
+    </div>
+
+    <!-- Análisis Social y Cultural -->
+    <div class="section">
+        <h2>Análisis Social y Cultural</h2>
+        <h3>Tendencias y Cambios Culturales</h3>
+        {{ analisis_social.tendcult | safe }}
+        <h3>Riesgos o Problemáticas a Abordar</h3>
+        {{ analisis_social.riesgoscult | safe }}
+        <h3>Referencias</h3>
+        {% for ref in analisis_social.referenciascult %}
+            <p>{{ ref | safe }}</p>
+        {% endfor %}
+    </div>
+
+    <div class="section disclaimer">
+      <p><strong>Descargo de responsabilidad:</strong> Este es un reporte generado de forma automática usando IA. La información aquí contenida es una construcción a partir de las fuentes de información y el pitch analizado, y no debe ser considerada como una asesoría o consultoría profesional. Te recomendamos usarla como un punto de partida para tus propias investigaciones.</p>
+    </div>
+
+  </div>
+</body>
+</html>

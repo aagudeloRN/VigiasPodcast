@@ -1,0 +1,1425 @@
+{
+  "name": "VigiasTendenciales-StartCo",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "236047ff-75a2-47fd-b338-1e9763c4015e",
+              "name": "chunks",
+              "type": "number",
+              "value": 15
+            },
+            {
+              "id": "f89e8f2f-8c1b-41c7-b523-372b822d5a05",
+              "name": "TextoPitch",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "1f5d6457-0577-4126-8e14-8b7a43b602ab",
+              "name": "NombreEmpresa",
+              "value": "={{ $('Webhook').item.json.body.empresa }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "982f35f3-aee1-4e6e-899b-58edb7cd8b41",
+      "name": "número máximo de chunks",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -160,
+        520
+      ],
+      "typeVersion": 3.3
+    },
+    {
+      "parameters": {
+        "content": "Indica el número máximo de bloques de texto (vectores) a usar en la respuesta. En este caso indica tomar los 15 vectores más cercanos.",
+        "height": 300,
+        "width": 220,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -220,
+        400
+      ],
+      "typeVersion": 1,
+      "id": "5abd74a1-449d-4221-8184-bdf6cf845e3e",
+      "name": "Sticky Note12"
+    },
+    {
+      "parameters": {
+        "jsCode": "let out = \"\"\nlet i = 0\n\n//out += $('AI Agent').first().json.output +  \" ---\\n\\n\"\n\nfor (const i in $input.all()) {\n  let itemText = \"--- CHUNK \" + i + \" ---\\n\"\n  itemText += \"\\n Author: \" + $input.all()[i].json.document.metadata.file_author\n  itemText += \"\\n Year: \" + $input.all()[i].json.document.metadata.file_year\n  itemText += \"\\n File_name: \" + $input.all()[i].json.document.metadata.file_url\n  itemText += \"\\n\\n\" + $input.all()[i].json.document.pageContent + \"\\n\"\n  itemText += \"\\n\"\n  out += \" ---\\n\\n\" + itemText\n}\n\nreturn {\n  'context': out\n};"
+      },
+      "id": "2ce796f4-f29f-486d-b954-2859bd34fb50",
+      "name": "Prepare chunks",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1200,
+        20
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "model": "text-embedding-3-small",
+        "options": {}
+      },
+      "id": "1d051c49-529a-4973-85df-498aa83f8d70",
+      "name": "Embeddings OpenAI2",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "position": [
+        900,
+        220
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "openAiApi": {
+          "id": "2CTMKopEqvF4Druu",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "6d807141-6a55-4156-b7af-f5eadd1042aa",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        1440,
+        240
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "openAiApi": {
+          "id": "2CTMKopEqvF4Druu",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "### 2. Interactuar con la base de conocimiento\nActiva al experto en vigilancias de tendencias Tecnológicas",
+        "height": 569,
+        "width": 1054,
+        "color": 7
+      },
+      "id": "9668ac8f-e8b2-45e9-9d4d-ba4ff262b488",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        760,
+        -200
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Eres un analista experto en vigilancia tecnológica, especializado en estructurar informes de vigilancia a partir de fuentes previamente curadas. Se te proporcionará unas instrucciones de vigilancia y varios fragmentos de información y datos relevantes como parte de estas fuentes. Tu tarea analizar la información de todos estos fragmentos e integrar el resultado en una única vigilancia de tecnologías, devolviendo el resultado en formato JSON, siguiendo las siguientes directrices estrictas:\n\n1. Organiza el contenido en los siguientes componentes, usando para el análisis solamente la información que se te comparte en el contexto de documentación:\n\n   - \"impacto\": Contenido de la sección \"Impacto o Aplicaciones en el contexto del pitch\". Describe cada una de las tecnologías identificadas y como estas afectan o se aplican al emprendimiento, tomando como referencia los textos o chunks aportados en el contexto. Genera al menos dos párrafos de análisis de impactos o aplicaciones según lo identificado en los chunks. Identifica cada párrafo en formato HTML, es decir \"<p> Texto del párrafo </p>\". Recuerda citar las fuentes utilizadas usando formato APA.\n\n   - \"tendencias\": Contenido de la sección \"Tendencias o proyecciones asociadas\". Presenta las tendencias emergentes o proyecciones basadas en la información curada, nuevamente toma como insumo la información de contexto y analiza como es su relación con lo presentado en el pitch. Genera al menos tres párrafos donde se presenten las tendencias y su impacto. Identifica cada párrafo en formato HTML, es decir \"<p> Texto del párrafo </p>\". Recuerda citar las fuentes utilizadas usando formato APA.\n\n   - \"referencias\": Lista de las fuentes utilizadas, extraídas de la metadata de cada fragmento, formateadas en estilo APA (por ejemplo, \"<p>Author (Year), File_name.</p>\"). Identifica cada referencia individual en formato HTML, es decir \"<p> Autor (Year), File_name </p>\". Si una fuente se repite, debes incluirla solo una vez. Esta sección debe aparecer al final del documento. no es necesario separarlas por coma o punto, con el identificador HTML es suficiente.\n\n2. No agregues información extra; utiliza como insumo para los análisis únicamente los fragmentos de información o chunks proporcionados. Cada chunk de contexto contiene el nombre del autor \"Author:\", el año de publicación \"Year:\" y el nombre del documento \"File_name:\", esta información te será útil para generar ls respectivas citaciones.\n\n3. Asegúrate de que el resultado sea un JSON válido y que cada componente refleje fielmente la información original, solo reestructurada para mejorar su visualización. El siguiente es un ejemplo demostrativo de como espero que sea el output:\n\n{\n\"impacto\": \n\"<p>En los próximos años...</p>\",\n\"tendencias\": \n\"<p>A pesar de las oportunidades, ...</p>\",\n\"referencias\": \n[\n\"<p>Autor1 (2025), nombre 1</p>\",\n\"<p>Autor2 (2025), nombre 1</p>\",\n\"<p>Autor3 (2025), nombre 1</p>\",\n\"<p>...</p>\"\n]\n}\n\nEl nombe del emprendimiento es: {{ $('número máximo de chunks').first().json.NombreEmpresa }}\n\nEl tema del pitch y las instrucciones específicas de la vigilancia son: \n{{ $('AI Agent').first().json.output }}\n\nlos fragmentos de texto que usarás como contexto son: \n{{ $('Prepare chunks').item.json.context }}\n\nGenera la salida **únicamente** en formato JSON, siguiendo la estructura exacta mostrada.\n",
+        "hasOutputParser": true
+      },
+      "id": "0e7a7796-c5fb-43a0-ae4b-b217a9e7ba4b",
+      "name": "Answer the query based on chunks",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        1460,
+        -40
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "mapeodinamico",
+          "mode": "list",
+          "cachedResultName": "mapeodinamico"
+        },
+        "prompt": "={{ $('AI Agent').item.json.output }}",
+        "topK": "={{ $('número máximo de chunks').item.json.chunks }}",
+        "options": {}
+      },
+      "id": "4628f127-0b50-48b2-90ab-5959ffc169ad",
+      "name": "Get top chunks matching query",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "position": [
+        820,
+        -40
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "pineconeApi": {
+          "id": "hrva4v8cQYJs9Giz",
+          "name": "PineconeProduction"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Recupera los 7 vectores más cercanos a partir del texto del pitch",
+        "height": 220,
+        "width": 340,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        780,
+        -120
+      ],
+      "typeVersion": 1,
+      "id": "434078fc-a4aa-40d8-99a3-cee366142198",
+      "name": "Sticky Note13"
+    },
+    {
+      "parameters": {
+        "content": "Toma los items devueltos por “Get top chunks” y los concatena en una variable context",
+        "height": 300,
+        "width": 220,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1140,
+        -120
+      ],
+      "typeVersion": 1,
+      "id": "004351c4-c4d7-46ff-bed4-40ec0bf34a39",
+      "name": "Sticky Note14"
+    },
+    {
+      "parameters": {
+        "content": "Usa el OpenAI Chat Model (gpt-3.5-turbo, etc.) y el Structured Output Parser.",
+        "height": 220,
+        "width": 420,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1380,
+        -120
+      ],
+      "typeVersion": 1,
+      "id": "bcfaffec-d599-4c4a-a681-44c824aa4a17",
+      "name": "Sticky Note15"
+    },
+    {
+      "parameters": {
+        "content": "Vectoriza el pitch y genera el valor numérico a contrastar con la BD",
+        "height": 240,
+        "width": 200,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        840,
+        120
+      ],
+      "typeVersion": 1,
+      "id": "4f323d92-d811-4b11-b5ac-b17eb82d5c40",
+      "name": "Sticky Note16"
+    },
+    {
+      "parameters": {
+        "content": "Toma toda la información, el contexto identificado y la pregunta, para generar con IA el resultado",
+        "height": 240,
+        "width": 200,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1380,
+        120
+      ],
+      "typeVersion": 1,
+      "id": "228fde2d-6f33-4b64-85fb-4e947b7499e4",
+      "name": "Sticky Note17"
+    },
+    {
+      "parameters": {
+        "content": "Toma toda la información, el contexto identificado y la pregunta, para generar con IA el resultado",
+        "height": 240,
+        "width": 200,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1600,
+        120
+      ],
+      "typeVersion": 1,
+      "id": "f7f3d784-99b0-45aa-879c-92a316162a60",
+      "name": "Sticky Note18"
+    },
+    {
+      "parameters": {
+        "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"nombre_emprendimiento\": {\n      \"type\": \"string\",\n      \"description\": \"Nombre de la startup o empresa extraído del pitch.\"\n    },\n    \"impacto\": {\n      \"type\": \"string\",\n      \"description\": \"Descripción del impacto o aplicaciones de las tecnologías en el contexto del pitch.\"\n    },\n    \"tendencias\": {\n      \"type\": \"string\",\n      \"description\": \"Texto que describe las tendencias o proyecciones asociadas a partir de la información curada.\"\n    },\n    \"referencias\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"Lista de referencias en formato APA.\"\n    }\n  },\n  \"required\": [\n    \"nombre_emprendimiento\",\n    \"impacto\",\n    \"tendencias\",\n    \"referencias\"\n  ]\n}\n"
+      },
+      "id": "4673d398-2a2a-4523-af69-2695c06703e0",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        1660,
+        240
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analiza los elementos tecnológicos presentes en este pitch. Menciona las tecnologías clave de las que se habla en el pitch, su función en la solución y qué tendencias tecnológicas deberían ser vigiladas en torno a estas (todo esto en un solo párrafo).\nEl resultado debe ser conciso, claro y útil para orientar ejercicios de vigilancia de tendencias.\n \nPitch: {{ $('OpenAI').item.json.text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        400,
+        -40
+      ],
+      "id": "36152e42-45d2-4aca-99f6-149a395d2142",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        360,
+        260
+      ],
+      "id": "89b1ecd3-009a-44f2-9d29-89147be2f900",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "2CTMKopEqvF4Druu",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Agente de Vigilancias Tecnológicas",
+        "height": 80,
+        "width": 280
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        380,
+        -80
+      ],
+      "id": "23c05c7a-d9d0-4649-910d-5a52839b844e",
+      "name": "Sticky Note34"
+    },
+    {
+      "parameters": {
+        "html": "<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Informe de Vigilancia</title>\n  <link href=\"https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600&display=swap\" rel=\"stylesheet\">\n  <style>\n    body {\n      font-family: 'Source Sans Pro', Arial, sans-serif;\n      background-color: #f7f7f7;\n      color: #333;\n      margin: 0;\n      padding: 0;\n    }\n    .container {\n      max-width: 600px;\n      margin: 0 auto;\n      padding: 20px;\n      background-color: #ffffff;\n    }\n    img.banner {\n      width: 100%;\n      height: auto;\n      display: block;\n    }\n    .disclaimer {\n    font-size: 0.8em;\n    font-style: italic;\n    }\n    h2 {\n      color: #005ea2;\n      border-bottom: 2px solid #ccc;\n      padding-bottom: 5px;\n      margin-top: 40px;\n    }\n    h3 {\n      color: #007acc;\n      margin-top: 25px;\n    }\n    p {\n      line-height: 1.6;\n      margin-bottom: 15px;\n    }\n    ul {\n      margin-top: 10px;\n      margin-bottom: 20px;\n      padding-left: 20px;\n    }\n    .section {\n      margin-bottom: 30px;\n    }\n  </style>\n</head>\n<body>\n  <div class=\"container\">\n    \n    <!-- Banner superior -->\n    <img src=\"https://aagudelorn.github.io/images/Banner%20principal.png\" alt=\"Banner superior\" class=\"banner\">\n    \n    <!-- Banner central como título -->\n    <img src=\"https://aagudelorn.github.io/images/Banner_1.png\" alt=\"Reporte Automatizado de Tendencias\" class=\"banner\">\n\n    <!-- Introducción -->\n    <div class=\"section\">\n      <p><strong>Hola {{ $('número máximo de chunks').first().json.NombreEmpresa}},</strong></p>\n      <p>Este informe fue generado especialmente para ti el <strong>{{ $today.format('dd MMM yyyy') }}</strong>, como parte de la experiencia <strong>Ruta N</strong> en el marco de <strong>StrtCo Medellín</strong>.</p>\n      <p>Usamos inteligencia artificial y fuentes especializadas para identificar señales clave del entorno que pueden ayudarte a fortalecer tu emprendimiento.</p>\n    </div>\n\n    <!-- Pitch -->\n    <div class=\"section\">\n      <h2>Pitch del Emprendimiento</h2>\n      <p>Escuchamos tu presentación durante el evento y capturamos tu mensaje con atención. Aquí te compartimos lo que recibimos:</p>\n      <p><i>\"{{ $('número máximo de chunks').first().json.text }}\"</i></p>\n    </div>\n\n    <!-- Banner de resultados -->\n    <img src=\"https://aagudelorn.github.io/images/Banner_2.png\" alt=\"Resultados obtenidos\" class=\"banner\">\n\n    <!-- Componente Tecnológico -->\n    <div class=\"section\">\n      <h2>Componente Tecnológico</h2>\n\n      <h3>Aplicaciones y oportunidades tecnológicas</h3>\n      <p>Analizamos las tecnologías emergentes que se conectan con tu propuesta. Aquí te mostramos cómo podrían ayudarte a escalar o transformar tu solución.</p>\n      <p>{{ $('Answer the query based on chunks').first().json.impacto }}</p>\n\n      <h3>Tendencias identificadas</h3>\n      <p>Estas son algunas de las tendencias tecnológicas más relevantes asociadas a tu pitch, incluyendo herramientas, plataformas y patrones que se consolidan a nivel global.</p>\n      <p>{{ $('Answer the query based on chunks').first().json.tendencias }}</p>\n\n      <h3>Referencias del capítulo</h3>\n      <ul>\n        {{ $('Answer the query based on chunks').first().json.referencias.map(ref => `<li>${ref}</li>`).join('') }}\n      </ul>\n    </div>\n\n    <!-- Componente Económico -->\n    <div class=\"section\">\n      <h2>Componente Económico</h2>\n\n      <h3>Modelos de negocio emergentes</h3>\n      <p>Desde una mirada estratégica, identificamos modelos de negocio que podrían inspirar la evolución de tu proyecto. Explora nuevas maneras de crear y capturar valor.</p>\n      <p>{{ $('Answer the query based on chunks1').first().json.modelos }}</p>\n\n      <h3>Riesgos económicos por anticipar</h3>\n      <p>Todo modelo tiene desafíos. Aquí resaltamos los principales riesgos económicos para que los tengas presentes y prepares tu estrategia frente a ellos.</p>\n      <p>{{ $('Answer the query based on chunks1').first().json.riesgos }}</p>\n\n      <h3>Referencias del capítulo</h3>\n      <ul>\n        {{ $('Answer the query based on chunks1').first().json.referencias.map(ref => `<li>${ref}</li>`).join('') }}\n      </ul>\n    </div>\n\n    <!-- Componente Socio-cultural -->\n    <div class=\"section\">\n      <h2>Componente Socio-Cultural</h2>\n\n      <h3>Tendencias y cambios en la cultura</h3>\n      <p>Observamos transformaciones en los hábitos, valores y comportamientos sociales que pueden influir directamente en la forma en que se percibe y adopta tu solución.</p>\n      <p>{{ $('Answer the query based on chunks2').first().json.generacionales }}</p>\n\n      <h3>Riesgos o problemáticas por abordar</h3>\n      <p>Además de oportunidades, estos cambios pueden representar desafíos. Aquí te mostramos posibles barreras o resistencias culturales que podrías enfrentar.</p>\n      <p>{{ $('Answer the query based on chunks2').first().json.riesgoscult }}</p>\n\n      <h3>Referencias del capítulo</h3>\n      <ul>\n        {{ $('Answer the query based on chunks2').first().json.referenciascult.map(ref => `<li>${ref}</li>`).join('') }}\n      </ul>\n    </div>\n\n  </div>\n\n  <div class=\"disclaimer\">\n  <h2>Disclaimer</h2>\n  <p>\n    <i>Este informe automatizado fue generado con el apoyo de herramientas de inteligencia artificial, utilizando metodologías probadas a nivel mundial, como la metodología RAG, y se ha desarrollado en el marco del Observatorio CTi de Ruta N. Sin embargo, a pesar de los procesos de análisis, el contenido aquí presentado está sujeto a equivocaciones y errores. </i>\n  </p>\n  <p>\n    <i>Cabe destacar que este documento no constituye una consultoría profesional ni implica una recomendación expresa por parte de Ruta N. Su propósito es servir como una puerta de entrada a información más completa, la cual puede ser consultada a través de las diferentes referencias citadas en el informe. Se recomienda a los usuarios utilizar este informe únicamente como una guía preliminar y, en caso de requerir asesoría o análisis profundos, buscar fuentes adicionales o consultar a especialistas.</i>\n  </p>\n</div>\n\n</body>\n</html>\n"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        2180,
+        560
+      ],
+      "id": "c6f3afda-41df-48dd-b8ac-202b879b04ba",
+      "name": "HTML",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Webhook').first().json.body.email }}",
+        "subject": "Desde Ruta N te compartimos un informe de tendencias hecho sólo para ti",
+        "message": "={{ $json.html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2420,
+        700
+      ],
+      "id": "0abfe808-11ae-4348-8f97-d6917ea9ee97",
+      "name": "Gmail",
+      "webhookId": "16f792a6-4f5c-4d7a-b5e7-d823e281ab5a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "U0ughCSp5ec6h06b",
+          "name": "Gmail account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "toRecipients": "={{ $('Webhook').first().json.body.email }}",
+        "subject": "Desde Ruta N te compartimos un informe de tendencias hecho sólo para ti",
+        "bodyContent": "={{ $json.html }}",
+        "additionalFields": {
+          "bodyContentType": "html"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        2420,
+        500
+      ],
+      "id": "f9b362a4-5613-4aa7-b49b-2f5477d7dc2d",
+      "name": "Microsoft Outlook",
+      "webhookId": "dc19eda3-262c-4366-b76a-bf71f2f21aa9",
+      "credentials": {
+        "microsoftOutlookOAuth2Api": {
+          "id": "OeMjj8kwQGTj4q0Q",
+          "name": "Microsoft Outlook Observatorio"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "binaryPropertyName": "audio",
+        "options": {
+          "language": "es"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -400,
+        520
+      ],
+      "id": "c6218447-2154-4ba6-ad79-77dd5f12cbf5",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "2CTMKopEqvF4Druu",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/formulario",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -740,
+        520
+      ],
+      "id": "4156001c-7e11-4599-a358-4153fdc6f6d3",
+      "name": "Webhook",
+      "webhookId": "479b17cc-198a-4399-b385-d3b3af332e68"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Identifica los componentes económicos del siguiente pitch. Describe su modelo de negocio, mecanismos de monetización y elementos que permitan escalar la solución. Señala también qué tendencias económicas o de mercado deberían ser monitoreadas en relación con este modelo (Todo esto en un solo párrafo). \n\nEl resultado debe ser conciso, claro y útil para orientar ejercicios de vigilancia de tendencias económicas.\n\nPitch:  {{ $('OpenAI').item.json.text }}\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        400,
+        560
+      ],
+      "id": "7a570600-23b5-4462-a9e0-5dfae90860c9",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        360,
+        720
+      ],
+      "id": "a9314bb7-7e87-4309-8d23-6b33cc61b7ae",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "2CTMKopEqvF4Druu",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Identifica los aspectos sociales y culturales que se evidencian en este pitch. ¿A qué tipo de usuarios apunta? ¿Qué comportamientos, valores o cambios sociales refleja? Indica también qué tendencias sociales deberían ser vigiladas (todo esto en un solo párrafo). \n\nEl resultado debe ser conciso, claro y útil para orientar ejercicios de vigilancia de tendencias.\n\nPitch: {{ $('OpenAI').item.json.text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.8,
+      "position": [
+        400,
+        1160
+      ],
+      "id": "fe0af041-07e4-433e-8197-8d76c970a04a",
+      "name": "AI Agent2"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        360,
+        1340
+      ],
+      "id": "5d089509-de57-4021-b18b-ce23da7123b5",
+      "name": "OpenAI Chat Model5",
+      "credentials": {
+        "openAiApi": {
+          "id": "2CTMKopEqvF4Druu",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Agente de Vigilancias Económicos",
+        "height": 80,
+        "width": 280
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        400,
+        420
+      ],
+      "id": "7baf263f-0380-4021-bb15-ca41efd129e9",
+      "name": "Sticky Note35"
+    },
+    {
+      "parameters": {
+        "content": "## Agente de Vigilancias Sociales y culturales",
+        "height": 80,
+        "width": 280
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        400,
+        1040
+      ],
+      "id": "2b3b045c-76d1-430f-9379-72c87f339f8c",
+      "name": "Sticky Note36"
+    },
+    {
+      "parameters": {
+        "jsCode": "let out = \"\"\nlet i = 0\n\n//out += $('AI Agent').first().json.output +  \" ---\\n\\n\"\n\nfor (const i in $input.all()) {\n  let itemText = \"--- CHUNK \" + i + \" ---\\n\"\n  itemText += \"\\n Author: \" + $input.all()[i].json.document.metadata.file_author\n  itemText += \"\\n Year: \" + $input.all()[i].json.document.metadata.file_year\n  itemText += \"\\n File_name: \" + $input.all()[i].json.document.metadata.file_url\n  itemText += \"\\n\\n\" + $input.all()[i].json.document.pageContent + \"\\n\"\n  itemText += \"\\n\"\n  out += \" ---\\n\\n\" + itemText\n}\n\nreturn {\n  'context': out\n};"
+      },
+      "id": "f5847def-b191-4668-bdda-09d0ad7f2b2f",
+      "name": "Prepare chunks1",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1200,
+        620
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "model": "text-embedding-3-small",
+        "options": {}
+      },
+      "id": "3cd58c3f-861e-4791-bdf7-36694776237e",
+      "name": "Embeddings OpenAI",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "position": [
+        900,
+        820
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "openAiApi": {
+          "id": "2CTMKopEqvF4Druu",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "095e14dd-a619-4c0f-8708-64a5fb2ce7fa",
+      "name": "OpenAI Chat Model1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        1440,
+        840
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "openAiApi": {
+          "id": "2CTMKopEqvF4Druu",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "### 2. Interactuar con la base de conocimiento\nActiva al experto en vigilancias de tendencias Tecnológicas",
+        "height": 569,
+        "width": 1054,
+        "color": 7
+      },
+      "id": "ef17faf6-27a5-4529-97cd-ddc176f1ade2",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        760,
+        400
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Eres un analista experto en vigilancia Económica y de Mercados, especializado en estructurar informes de vigilancia a partir de fuentes previamente curadas. Se te proporcionará unas instrucciones de vigilancia y varios fragmentos de información y datos relevantes como parte de estas fuentes. Tu tarea analizar la información de todos estos fragmentos e integrar el resultado en una única vigilancia, devolviendo el resultado en formato JSON, siguiendo las siguientes directrices estrictas:\n\n1. Organiza el contenido en los siguientes componentes, usando para el análisis solamente la información que se te comparte en el contexto de documentación:\n\n- \"modelos\": Contenido de la sección \"Modelos de negocio emergentes\". Describe posibles modelos de negocio similares al propuesto y las aproximaciones o formas novedosas de hacer las cosas. Tomando como referencia los textos o chunks aportados en el contexto. Genera al menos un párrafo por cada modelo de negocio emergente según lo que identifiques en los chunks. Identifica cada párrafo en formato HTML, es decir, usa el formato \"<p> Texto del párrafo </p>\". Recuerda citar las fuentes utilizadas usando formato APA.\n\n- \"riesgos\": Contenido de la sección \"Riesgos o condiciones económicas clave\". Corresponde a la identificación de posibles riesgos o tendencias económicas que puedan afectar el modelo de negocio. Tomando como referencia los textos o chunks aportados en el contexto. Genera al menos un párrafo por cada riesgo según lo que identifiques del contexto aportado en los chunks. Identifica cada párrafo en formato HTML, es decir, usa el formato \"<p> Texto del párrafo </p>\". Recuerda citar las fuentes utilizadas usando formato APA.\n\n- \"referencias\": Lista de las fuentes utilizadas, extraídas de la metadata de cada fragmento, formateadas en estilo APA (por ejemplo, \"<p>Author (Year), File_name.</p>\"). Identifica cada referencia individual en formato HTML, es decir \"<p> Autor (Year), File_name </p>\". Si una fuente se repite, debes incluirla solo una vez. Esta sección debe aparecer al final del documento. no es necesario separarlas por coma o punto, con el identificador HTML es suficiente.\n\n2. No agregues información extra; utiliza como insumo para los análisis únicamente los fragmentos de información o chunks proporcionados. Cada chunk de contexto contiene el nombre del autor \"Author:\", el año de publicación \"Year:\" y el nombre del documento \"File_name:\", esta información te será útil para generar las respectivas citaciones.\n\n3. Asegúrate de que el resultado sea un JSON válido y que cada componente refleje fielmente la información original, solo reestructurada para mejorar su visualización. El siguiente es un ejemplo demostrativo de como espero que sea el output:\n\n{\n\"modelos\": \n\"<p>El modelo de negocio ... </p>\",\n\"riesgos\": \n\"<p>Uno de los riesgos clave es ...</p>\",\n\"referencias\": \n[\n\"<p>Autor1 (2025), nombre 1</p>\",\n\"<p>Autor2 (2025), nombre 1</p>\",\n\"<p>Autor3 (2025), nombre 1</p>\",\n\"<p>...</p>\"\n]\n}\n\n\nEl nombre del emprendimiento es: {{ $('número máximo de chunks').first().json.NombreEmpresa }}\n\nEl tema del pitch y las instrucciones específicas de la vigilancia son: \n{{ $('AI Agent1').first().json.output }}\n\nlos fragmentos de texto que usarás como contexto son: \n{{ $('Prepare chunks1').item.json.context }}\n\nGenera la salida **únicamente** en formato JSON, siguiendo la estructura exacta mostrada.\n",
+        "hasOutputParser": true
+      },
+      "id": "24b22228-7572-4f23-9abe-5428c119b53c",
+      "name": "Answer the query based on chunks1",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        1460,
+        560
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "mapeodinamico",
+          "mode": "list",
+          "cachedResultName": "mapeodinamico"
+        },
+        "prompt": "={{ $('AI Agent1').item.json.output }}",
+        "topK": "={{ $('número máximo de chunks').item.json.chunks }}",
+        "options": {}
+      },
+      "id": "190a6b8c-f373-4c93-8725-fb9415eaee48",
+      "name": "Get top chunks matching query1",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "position": [
+        820,
+        560
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "pineconeApi": {
+          "id": "hrva4v8cQYJs9Giz",
+          "name": "PineconeProduction"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Recupera los 7 vectores más cercanos a partir del texto del pitch",
+        "height": 220,
+        "width": 340,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        780,
+        480
+      ],
+      "typeVersion": 1,
+      "id": "b16e7440-ad71-497a-a062-5e3047f9b8ba",
+      "name": "Sticky Note19"
+    },
+    {
+      "parameters": {
+        "content": "Toma los items devueltos por “Get top chunks” y los concatena en una variable context",
+        "height": 300,
+        "width": 220,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1140,
+        480
+      ],
+      "typeVersion": 1,
+      "id": "1d2bba60-8ee1-49b1-8bc9-83fecdb9c5d2",
+      "name": "Sticky Note20"
+    },
+    {
+      "parameters": {
+        "content": "Usa el OpenAI Chat Model (gpt-3.5-turbo, etc.) y el Structured Output Parser.",
+        "height": 220,
+        "width": 420,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1380,
+        480
+      ],
+      "typeVersion": 1,
+      "id": "e6f47028-dd52-42e2-8e0a-41d200d39dd6",
+      "name": "Sticky Note21"
+    },
+    {
+      "parameters": {
+        "content": "Vectoriza el pitch y genera el valor numérico a contrastar con la BD",
+        "height": 240,
+        "width": 200,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        840,
+        720
+      ],
+      "typeVersion": 1,
+      "id": "a3c3ead2-fc09-493d-91f5-c0318c0d599d",
+      "name": "Sticky Note22"
+    },
+    {
+      "parameters": {
+        "content": "Toma toda la información, el contexto identificado y la pregunta, para generar con IA el resultado",
+        "height": 240,
+        "width": 200,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1380,
+        720
+      ],
+      "typeVersion": 1,
+      "id": "37dcf0ee-7b15-4807-b858-a40e2829f6dc",
+      "name": "Sticky Note23"
+    },
+    {
+      "parameters": {
+        "content": "Toma toda la información, el contexto identificado y la pregunta, para generar con IA el resultado",
+        "height": 240,
+        "width": 200,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1600,
+        720
+      ],
+      "typeVersion": 1,
+      "id": "c65172f9-a97b-4e18-a3b1-517e7f46ccef",
+      "name": "Sticky Note24"
+    },
+    {
+      "parameters": {
+        "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"modelos\": {\n      \"type\": \"string\",\n      \"description\": \"Descripción de posibles modelos de negocio innovadores en el contexto del pitch.\"\n    },\n    \"riesgos\": {\n      \"type\": \"string\",\n      \"description\": \"Texto que describe posibles riesgos económicos asociados a partir de la información curada.\"\n    },\n    \"referencias\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"Lista de referencias en formato APA.\"\n    }\n  },\n  \"required\": [\n    \"modelos\",\n    \"riesgos\",\n    \"referencias\"\n  ]\n}\n"
+      },
+      "id": "b5a777bf-c557-4964-8705-dcfb67906b5a",
+      "name": "Structured Output Parser1",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        1660,
+        840
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "let out = \"\"\nlet i = 0\n\n//out += $('AI Agent').first().json.output +  \" ---\\n\\n\"\n\nfor (const i in $input.all()) {\n  let itemText = \"--- CHUNK \" + i + \" ---\\n\"\n  itemText += \"\\n Author: \" + $input.all()[i].json.document.metadata.file_author\n  itemText += \"\\n Year: \" + $input.all()[i].json.document.metadata.file_year\n  itemText += \"\\n File_name: \" + $input.all()[i].json.document.metadata.file_url\n  itemText += \"\\n\\n\" + $input.all()[i].json.document.pageContent + \"\\n\"\n  itemText += \"\\n\"\n  out += \" ---\\n\\n\" + itemText\n}\n\nreturn {\n  'context': out\n};"
+      },
+      "id": "ad823dc6-1dc4-4acd-960b-5697b9e0ad74",
+      "name": "Prepare chunks2",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1200,
+        1220
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "model": "text-embedding-3-small",
+        "options": {}
+      },
+      "id": "00cb269c-a646-4d98-ae67-24edaeab0643",
+      "name": "Embeddings OpenAI3",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "position": [
+        900,
+        1420
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "openAiApi": {
+          "id": "2CTMKopEqvF4Druu",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "0d02cd17-d443-49cc-9b78-2c84039baea3",
+      "name": "OpenAI Chat Model4",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [
+        1440,
+        1440
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "openAiApi": {
+          "id": "2CTMKopEqvF4Druu",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "### 2. Interactuar con la base de conocimiento\nActiva al experto en vigilancias de tendencias Tecnológicas",
+        "height": 569,
+        "width": 1054,
+        "color": 7
+      },
+      "id": "3c5e1da4-f964-4979-9c95-f3f41a399300",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        760,
+        1000
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Eres un analista experto en vigilancia de tendencias culturales y sociales, especializado en estructurar informes de vigilancia a partir de fuentes previamente curadas. Se te proporcionará unas instrucciones de vigilancia y varios fragmentos de información y datos relevantes como parte de estas fuentes. Tu tarea analizar la información de todos estos fragmentos e integrar el resultado en una única vigilancia de tecnologías, devolviendo el resultado en formato JSON, siguiendo las siguientes directrices estrictas:\n\n1. Organiza el contenido en los siguientes componentes, usando para el análisis solamente la información que se te comparte en el contexto de documentación:\n\n   - \"tendcult\": Contenido de la sección \"Tendencias y cambios culturales\". Describe lo posibles cambios culturales y sociales que puedan afectar de una u otra forma el modelo de negocio presentado, tomando como referencia los textos o chunks aportados en el contexto. Genera un párrafo de análisis para cada tendencia, según lo identificado en los chunks. Identifica cada párrafo en formato HTML, es decir \"<p> Texto del párrafo </p>\". Recuerda citar las fuentes utilizadas usando formato APA.\n\n   - \"riesgoscult\": Contenido de la sección \"Riesgos o problemáticas a abordar\". Describe los posibles riesgos que pueden llegar junto con estas tendencias e impactr el modelo de negocio, indica posibles acciones de ajuste que el emprendedor pueda implementar, nuevamente toma como insumo la información de contexto y analiza como es su relación con lo presentado en el pitch. Genera al menos tres párrafos donde se presenten las tendencias y su impacto. Identifica cada párrafo en formato HTML, es decir \"<p> Texto del párrafo </p>\". Recuerda citar las fuentes utilizadas usando formato APA.\n\n   - \"referenciascult\": Lista de las fuentes utilizadas, extraídas de la metadata de cada fragmento, formateadas en estilo APA (por ejemplo, \"<p>Author (Year), File_name.</p>\"). Identifica cada referencia individual en formato HTML, es decir \"<p> Autor (Year), File_name </p>\". Si una fuente se repite, debes incluirla solo una vez. Esta sección debe aparecer al final del documento. no es necesario separarlas por coma o punto, con el identificador HTML es suficiente.\n\n2. No agregues información extra; utiliza como insumo para los análisis únicamente los fragmentos de información o chunks proporcionados. Cada chunk de contexto contiene el nombre del autor \"Author:\", el año de publicación \"Year:\" y el nombre del documento \"File_name:\", esta información te será útil para generar ls respectivas citaciones.\n\n3. Asegúrate de que el resultado sea un JSON válido y que cada componente refleje fielmente la información original, solo reestructurada para mejorar su visualización. El siguiente es un ejemplo demostrativo de como espero que sea el output:\n\n{\n\"generacionales\": \n\"<p>En los próximos años...</p>\",\n\"riesgoscult\": \n\"<p>A pesar de las oportunidades, ...</p>\",\n\"referenciascult\": \n[\n\"<p>Autor1 (2025), nombre 1</p>\",\n\"<p>Autor2 (2025), nombre 1</p>\",\n\"<p>Autor3 (2025), nombre 1</p>\",\n\"<p>...</p>\"\n]\n}\n\nEl nombe del emprendimiento es: {{ $('número máximo de chunks').first().json.NombreEmpresa }}\n\nEl tema del pitch y las instrucciones específicas de la vigilancia son: \n{{ $('AI Agent').first().json.output }}\n\nlos fragmentos de texto que usarás como contexto son: \n{{ $('Prepare chunks2').item.json.context }}\n\nGenera la salida **únicamente** en formato JSON, siguiendo la estructura exacta mostrada.\n",
+        "hasOutputParser": true
+      },
+      "id": "3ff39d05-742e-4393-9dc5-b0763910683b",
+      "name": "Answer the query based on chunks2",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [
+        1460,
+        1160
+      ],
+      "typeVersion": 1.4
+    },
+    {
+      "parameters": {
+        "mode": "load",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "mapeodinamico",
+          "mode": "list",
+          "cachedResultName": "mapeodinamico"
+        },
+        "prompt": "={{ $('AI Agent2').item.json.output }}",
+        "topK": "={{ $('número máximo de chunks').item.json.chunks }}",
+        "options": {}
+      },
+      "id": "e77aefcc-52e8-4326-b839-c27c54db8600",
+      "name": "Get top chunks matching query2",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "position": [
+        820,
+        1160
+      ],
+      "typeVersion": 1,
+      "credentials": {
+        "pineconeApi": {
+          "id": "hrva4v8cQYJs9Giz",
+          "name": "PineconeProduction"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Recupera los 7 vectores más cercanos a partir del texto del pitch",
+        "height": 220,
+        "width": 340,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        780,
+        1080
+      ],
+      "typeVersion": 1,
+      "id": "10f8e877-e53a-4ac2-bd8e-304bfb5d8166",
+      "name": "Sticky Note25"
+    },
+    {
+      "parameters": {
+        "content": "Toma los items devueltos por “Get top chunks” y los concatena en una variable context",
+        "height": 300,
+        "width": 220,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1140,
+        1080
+      ],
+      "typeVersion": 1,
+      "id": "f9097099-d552-4524-be47-0f2ebb12974b",
+      "name": "Sticky Note26"
+    },
+    {
+      "parameters": {
+        "content": "Usa el OpenAI Chat Model (gpt-3.5-turbo, etc.) y el Structured Output Parser.",
+        "height": 220,
+        "width": 420,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1380,
+        1080
+      ],
+      "typeVersion": 1,
+      "id": "d65c3780-0b0e-4a21-b9b1-d50c880f4500",
+      "name": "Sticky Note27"
+    },
+    {
+      "parameters": {
+        "content": "Vectoriza el pitch y genera el valor numérico a contrastar con la BD",
+        "height": 240,
+        "width": 200,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        840,
+        1320
+      ],
+      "typeVersion": 1,
+      "id": "d12fa812-cc4f-44a1-8199-e3b6074817d8",
+      "name": "Sticky Note28"
+    },
+    {
+      "parameters": {
+        "content": "Toma toda la información, el contexto identificado y la pregunta, para generar con IA el resultado",
+        "height": 240,
+        "width": 200,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1380,
+        1320
+      ],
+      "typeVersion": 1,
+      "id": "dbdd1613-3c69-44b5-a6f4-d635b6ed2603",
+      "name": "Sticky Note29"
+    },
+    {
+      "parameters": {
+        "content": "Toma toda la información, el contexto identificado y la pregunta, para generar con IA el resultado",
+        "height": 240,
+        "width": 200,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1600,
+        1320
+      ],
+      "typeVersion": 1,
+      "id": "e47b5396-45f6-487f-b59f-824718cd5561",
+      "name": "Sticky Note30"
+    },
+    {
+      "parameters": {
+        "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"generacionales\": {\n      \"type\": \"string\",\n      \"description\": \"Descripción de las tendecias sociales y culturales.\"\n    },\n    \"riesgoscult\": {\n      \"type\": \"string\",\n      \"description\": \"Texto que describe los posibles riesgos asociados a los temas culturales y sociales\"\n    },\n    \"referenciascult\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      },\n      \"description\": \"Lista de referencias en formato APA.\"\n    }\n  },\n  \"required\": [\n    \"generacionales\",\n    \"riesgoscult\",\n    \"referenciascult\"\n  ]\n}\n"
+      },
+      "id": "87c2cf38-69b8-4d46-8ad1-c16e10d643ee",
+      "name": "Structured Output Parser2",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        1660,
+        1440
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        1960,
+        560
+      ],
+      "id": "4a4b2c8f-274f-422a-85ea-4a49351eb34f",
+      "name": "Merge",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "content": "Espera a que llegue información del formulario en GitHub https://aagudelorn.github.io/n8n/",
+        "height": 220,
+        "width": 340,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -840,
+        440
+      ],
+      "typeVersion": 1,
+      "id": "a49ec542-4b1d-444b-bd84-1a875dbf8cc0",
+      "name": "Sticky Note31"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "aagudelo.app.n8n.cloud",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36",
+            "content-length": "379785",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "accept-language": "es,en;q=0.9",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "200.13.231.76",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "CO",
+            "cf-ray": "92a0aefd77daa554-MIA",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "multipart/form-data; boundary=----WebKitFormBoundaryBYvbYIchHyWAwYyO",
+            "origin": "https://aagudelorn.github.io",
+            "priority": "u=1, i",
+            "referer": "https://aagudelorn.github.io/",
+            "sec-ch-ua": "\"Chromium\";v=\"134\", \"Not:A-Brand\";v=\"24\", \"Google Chrome\";v=\"134\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+            "x-forwarded-for": "200.13.231.76, 172.70.254.215",
+            "x-forwarded-host": "aagudelo.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-13-6db466c7ff-2hnlh",
+            "x-is-trusted": "yes",
+            "x-real-ip": "200.13.231.76"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "email": "alvaro.agudelo@rutanmedellin.org",
+            "empresa": "Hola Amigo"
+          },
+          "webhookUrl": "https://aagudelo.app.n8n.cloud/webhook/formulario",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Prepare chunks": {
+      "main": [
+        [
+          {
+            "node": "Answer the query based on chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI2": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Get top chunks matching query",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Answer the query based on chunks",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get top chunks matching query": {
+      "main": [
+        [
+          {
+            "node": "Prepare chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Get top chunks matching query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "número máximo de chunks": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Answer the query based on chunks": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Answer the query based on chunks",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Microsoft Outlook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft Outlook": {
+      "main": [
+        []
+      ]
+    },
+    "Gmail": {
+      "main": [
+        []
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "número máximo de chunks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare chunks1": {
+      "main": [
+        [
+          {
+            "node": "Answer the query based on chunks1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Get top chunks matching query1",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Answer the query based on chunks1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get top chunks matching query1": {
+      "main": [
+        [
+          {
+            "node": "Prepare chunks1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Answer the query based on chunks1",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare chunks2": {
+      "main": [
+        [
+          {
+            "node": "Answer the query based on chunks2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI3": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Get top chunks matching query2",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Answer the query based on chunks2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get top chunks matching query2": {
+      "main": [
+        [
+          {
+            "node": "Prepare chunks2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Answer the query based on chunks2",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Get top chunks matching query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent2": {
+      "main": [
+        [
+          {
+            "node": "Get top chunks matching query2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Answer the query based on chunks1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Answer the query based on chunks2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveExecutionProgress": true,
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "8ccdd1b1-c687-40bf-95a1-fb0d2b05e668",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f3e595473418f8a8edb29a223af4df17e1d763c40bc54c67504be3d4b317a039"
+  },
+  "id": "Zhr7Pw4qhOXSluaB",
+  "tags": []
+}
