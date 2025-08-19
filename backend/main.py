@@ -190,7 +190,7 @@ async def analyze_pitch_endpoint(background_tasks: BackgroundTasks, email: str =
 
 # Montar el directorio del frontend unificado
 # Esto debe ir después de definir las rutas de la API
-app.mount("/", StaticFiles(directory="../frontend", html=True), name="static")
+app.mount("/", StaticFiles(directory="frontend", html=True), name="static")
 
 if __name__ == "__main__":
     print("Para iniciar el servidor unificado (backend + frontend), ejecuta:")
