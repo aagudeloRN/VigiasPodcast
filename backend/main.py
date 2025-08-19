@@ -23,7 +23,7 @@ sendgrid_client = SendGridAPIClient(os.getenv("SENDGRID_API_KEY"))
 
 # Configurar Jinja2
 env = jinja2.Environment(
-    loader=jinja2.FileSystemLoader('./templates'),
+    loader=jinja2.FileSystemLoader('backend/templates'),
     autoescape=jinja2.select_autoescape(['html', 'xml'])
 )
 
